@@ -31,6 +31,8 @@ readdna
 xc2c_warp
 .svn
 *.exe
+cmake*
+.idea
 
 # /bscan_spi/
 /bscan_spi/bscan_spi_isf_sp3adsp

@@ -88,6 +88,8 @@ int ProgAlgSPIFlash::spi_flashinfo_spansion(unsigned char *buf){
   switch (buf[3]){
   case 0x01:
     pages = 4096;
+  case 0x4d:
+    pages = 65536;
   }
   pgsize = 256;
   return 1;
@@ -478,6 +480,10 @@ int ProgAlgSPIFlash::spi_flashinfo_m25p_mx25l(unsigned char *buf, int is_mx25l)
             break;
           case 0x18:
             pages = 65536;
+            sector_size = 65536;
+            break;
+          case 0x19:
+            pages = 131072;
             sector_size = 65536;
             break;
           case 0x20:
