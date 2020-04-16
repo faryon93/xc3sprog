@@ -21,11 +21,21 @@ void detect_chain(Jtag *jtag, DeviceDB *db)
     {
       DeviceID id = jtag->getDeviceID(i);
       fprintf(stderr,"JTAG loc.: %3d  IDCODE: 0x%08lx  ", i, (unsigned long)id);
+
+      // USERCODE einlesen
+      const byte JTAG_USERCODE = 0x08;
+      byte o_data[4];
+      jtag->selectDevice(i);
+      jtag->shiftIR(&JTAG_USERCODE);
+      jtag->shiftDR(NULL, o_data, 32);
+      fprintf(stderr,"USERCODE: 0x%02X%02X%02X%02X  ",
+              o_data[3], o_data[2], o_data[1], o_data[0]);
+
       int length = db->idToIRLength(id);
       if (length > 0)
         {
           jtag->setDeviceIRLength(i,length);
-          fprintf(stderr,"Desc: %30s Rev: %c  IR length: %2d\n",
+          fprintf(stderr,"Desc: %20s Rev: %c  IR length: %2d\n",
                   db->idToDescription(id),
                   (int)(id >> 28) | 'A', length);
         }
