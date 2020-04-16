@@ -36,6 +36,7 @@ const byte ProgAlgSPIFlash::CFG_IN=0x05;
 const byte ProgAlgSPIFlash::CONFIG=0xee;
 const byte ProgAlgSPIFlash::BYPASS=0xff;
 
+
 #define PAGE_PROGRAM         0x02
 #define PAGE_READ            0x03
 #define READ_STATUS_REGISTER 0x05
@@ -85,6 +86,22 @@ ProgAlgSPIFlash::~ProgAlgSPIFlash(void)
 int ProgAlgSPIFlash::spi_flashinfo_spansion(unsigned char *buf){
   fprintf(stderr, "Found Spansion Device, Device ID %02x, memory type %02x, capacity %02x\n",
          buf[1], buf[2], buf[3]);
+
+  if (buf[1] == 0x20 && buf[2] == 0x18)
+  {
+    pages = 65536;      // 16MB
+    sector_size = 65536;
+    pgsize = 256;
+    return 1;
+  }
+  else if (buf[1] == 0x02 && buf[2] == 0x19)
+  {
+      pages = 131272;   // 32MB
+      sector_size = 65536;
+      pgsize = 256;
+      return 1;
+  }
+
   switch (buf[3]){
   case 0x01:
     pages = 4096;
@@ -526,21 +543,23 @@ int ProgAlgSPIFlash::spi_flashinfo(void)
   int res;
 
   // send JEDEC info
-  spi_xfer_user1(NULL,0,0,fbuf,4,1);
+  spi_xfer_user1(NULL,0,0,fbuf,6,1);
 
   /* FIXME: for some reason on the FT2232test board
      with XC3S200 and AT45DB321 the commands need to be repeated*/
-  spi_xfer_user1(NULL,0,0,fbuf,4,1);
+  spi_xfer_user1(NULL,0,0,fbuf,6,1);
 
   // read result
-  spi_xfer_user1(fbuf,4,1,NULL, 0, 0);
+  spi_xfer_user1(fbuf,6,1,NULL, 0, 0);
 
   fbuf[0] = bitRevTable[fbuf[0]];
   fbuf[1] = bitRevTable[fbuf[1]];
   fbuf[2] = bitRevTable[fbuf[2]];
   fbuf[3] = bitRevTable[fbuf[3]];
-  fprintf(stderr, "JEDEC: %02x %02x 0x%02x 0x%02x\n",
-	  fbuf[0],fbuf[1], fbuf[2], fbuf[3]);
+  fbuf[4] = bitRevTable[fbuf[4]];
+  fbuf[5] = bitRevTable[fbuf[5]];
+  fprintf(stderr, "JEDEC: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+	  fbuf[0],fbuf[1], fbuf[2], fbuf[3], fbuf[4], fbuf[5]);
 
   manf_id = fbuf[0];
   prod_id = fbuf[1]<<8 | fbuf[2];
